@@ -1,19 +1,20 @@
 [
   {
-    "name": "/summary",
+    "name": "teacher summary is formatted after role confirmation",
     "steps": [
       {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Request printable study summary for teachers"
-            }
-          }
-        ],
         "send": {
-          "text": "/summary"
-        }
+          "callback": "teacher:tools"
+        },
+        "expect": [{ "method": "editMessageText", "payload": { "text": "Teacher tools are for teachers and tutors. Confirm your role to create printable summaries." } }]
+      },
+      {
+        "send": { "callback": "teacher:confirm" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Send the topic for your printable study summary." } }]
+      },
+      {
+        "send": { "text": "Photosynthesis" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Study summary: Photosynthesis\n\nKey idea\nDefine the topic in one precise sentence.\n\nTeaching sequence\n1. Introduce the vocabulary.\n2. Model one example.\n3. Ask students to explain the reasoning.\n\nReview\nUse one short practice task and discuss the answer." } }]
       }
     ]
   }
