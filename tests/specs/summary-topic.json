@@ -1,0 +1,20 @@
+[
+  {
+    "name": "/summary",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Request printable study summary for teachers"
+            }
+          }
+        ],
+        "send": {
+          "text": "/summary"
+        }
+      }
+    ]
+  }
+]
