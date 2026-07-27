@@ -1,19 +1,35 @@
 [
   {
-    "name": "/ask",
+    "name": "/ask submits a question, selects a subject, and offers practice",
     "steps": [
       {
         "expect": [
           {
             "method": "sendMessage",
-            "payload": {
-              "text": "Submit a question with optional subject clarification"
-            }
+            "payload": { "text": "Choose the subject. If it is unclear, Math is the default." }
           }
         ],
         "send": {
-          "text": "/ask"
+          "text": "/ask 2 + 3"
         }
+      },
+      {
+        "send": { "callback": "subject:Math" },
+        "expect": [
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Solution\n1. Write the expression: 2 + 3\n2. Apply the operations in order.\nFinal answer: 5" }
+          }
+        ]
+      },
+      {
+        "send": { "callback": "study:practice:Math" },
+        "expect": [
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Practice problem — Medium\nSolve a similar expression by changing one number.\nCheck: follow the same order of operations." }
+          }
+        ]
       }
     ]
   }

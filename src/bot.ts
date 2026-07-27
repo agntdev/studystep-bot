@@ -1,15 +1,19 @@
-import { Composer } from "grammy";
-import { createBot, type BotContext, type CreateBotOptions } from "./toolkit/index.js";
+import { Bot, Composer } from "grammy";
+import { createBot, type BotContext, type CreateBotOptions, resolveSessionStorage } from "./toolkit/index.js";
+import { PersistentStore } from "./toolkit/persistent.js";
 import type { StorageAdapter } from "grammy";
 
 // The per-chat session shape (ephemeral conversation state only). Extend as the
 // bot grows. Durable domain data must NOT live here — use the toolkit's
 // persistent storage (see AGENTS.md).
 export interface Session {
-  // example: step?: "awaiting_amount";
+  step?: "awaiting_question" | "awaiting_summary";
+  expiresAt?: number;
+  question?: string;
+  teacher?: boolean;
 }
 
-export type Ctx = BotContext<Session>;
+export type Ctx = BotContext<Session> & { studyStore: PersistentStore<Session> };
 
 /**
  * BuildBotOptions lets a runtime-specific ENTRY POINT (never a feature handler)
@@ -43,11 +47,21 @@ export interface BuildBotOptions {
  * build-time manifest because Workers has no filesystem.
  */
 export async function buildBot(token: string, opts: BuildBotOptions = {}) {
+  // One adapter backs both ephemeral conversation state and named durable
+  // records. PersistentStore uses explicit record/index keys only; it never
+  // enumerates the backing keyspace.
+  const storage = resolveSessionStorage<Session>(opts.storage);
   const bot = createBot<Session>(token, {
     initial: () => ({}),
-    storage: opts.storage,
+    storage,
     telemetryEnv: opts.telemetryEnv,
     telemetryReporterOptions: opts.telemetryReporterOptions,
+  }) as unknown as Bot<Ctx>;
+
+  const studyStore = new PersistentStore(storage);
+  bot.use((ctx, next) => {
+    (ctx as Ctx).studyStore = studyStore;
+    return next();
   });
 
   const handlers = opts.handlers ?? (await loadHandlersFromDisk());
